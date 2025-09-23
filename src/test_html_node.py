@@ -1,7 +1,7 @@
 import unittest
 
-from htmlnode import LeafNode, ParentNode, text_node_to_html_node
-from textnode import TextNode, TextType
+from html_node import LeafNode, ParentNode, text_node_to_html_node
+from text_node import TextNode, TextType
 
 
 class TestLeafNode(unittest.TestCase):
