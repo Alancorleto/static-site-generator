@@ -2,6 +2,19 @@ import re
 from .text_node import TextNode, TextType
 
 
+def markdown_to_text_nodes(markdown):
+    nodes = [TextNode(markdown, TextType.TEXT)]
+
+    # Split by images first to avoid conflicts with links
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+
+    return nodes
+
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     res = []
     for old_node in old_nodes:
@@ -11,31 +24,34 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             raise ValueError("Unmatched delimiter in text")
         for i, text in enumerate(text_split):
             if i % 2 == 1:
-                res.append(TextNode(text, text_type))
+                    res.append(TextNode(text, text_type))
             else:
-                res.append(TextNode(text, old_node.text_type))
+                if len(text) > 0:
+                    res.append(TextNode(text, old_node.text_type, old_node.url))
     return res
 
 
 def split_nodes_image(old_nodes):
     res = []
     for old_node in old_nodes:
-        images = extract_markdown_images(old_node.text)
-
-        for alt_text, url in images:
-            delimiter = f"![{alt_text}]({url})"
-            text_split = old_node.text.split(delimiter)
-            # Append text before the link
-            if text_split[0]:
-                res.append(TextNode(text_split[0], old_node.text_type))
-            # Append the link node
-            res.append(TextNode(alt_text, TextType.IMAGE, url))
-            # Update old_node_text to the remaining text after the link
-            old_node.text = text_split[-1]
-        
-        # Append any remaining text after the last link
-        if old_node.text:
-            res.append(TextNode(old_node.text, old_node.text_type))
+        if old_node.text_type != TextType.TEXT:
+            res.append(old_node)
+        else:
+            images = extract_markdown_images(old_node.text)
+            for alt_text, url in images:
+                delimiter = f"![{alt_text}]({url})"
+                text_split = old_node.text.split(delimiter)
+                # Append text before the link
+                if text_split[0]:
+                    res.append(TextNode(text_split[0], old_node.text_type, old_node.url))
+                # Append the link node
+                res.append(TextNode(alt_text, TextType.IMAGE, url))
+                # Update old_node_text to the remaining text after the link
+                old_node.text = text_split[-1]
+            
+            # Append any remaining text after the last link
+            if old_node.text:
+                res.append(TextNode(old_node.text, old_node.text_type, old_node.url))
     return res
 
 
@@ -43,22 +59,25 @@ def split_nodes_link(old_nodes):
     res = []
     text_split = []
     for old_node in old_nodes:
-        links = extract_markdown_links(old_node.text)
 
-        for link_text, url in links:
-            delimiter = f"[{link_text}]({url})"
-            text_split = old_node.text.split(delimiter)
-            # Append text before the link
-            if text_split[0]:
-                res.append(TextNode(text_split[0], old_node.text_type))
-            # Append the link node
-            res.append(TextNode(link_text, TextType.LINK, url))
-            # Update old_node_text to the remaining text after the link
-            old_node.text = text_split[-1]
-        
-        # Append any remaining text after the last link
-        if old_node.text:
-            res.append(TextNode(old_node.text, old_node.text_type))
+        if old_node.text_type != TextType.TEXT:
+            res.append(old_node)
+        else:
+            links = extract_markdown_links(old_node.text)
+            for link_text, url in links:
+                delimiter = f"[{link_text}]({url})"
+                text_split = old_node.text.split(delimiter)
+                # Append text before the link
+                if text_split[0]:
+                    res.append(TextNode(text_split[0], old_node.text_type, old_node.url))
+                # Append the link node
+                res.append(TextNode(link_text, TextType.LINK, url))
+                # Update old_node_text to the remaining text after the link
+                old_node.text = text_split[-1]
+            
+            # Append any remaining text after the last link
+            if old_node.text:
+                res.append(TextNode(old_node.text, old_node.text_type, old_node.url))
     
     return res
 
