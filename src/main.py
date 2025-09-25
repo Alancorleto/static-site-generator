@@ -1,9 +1,8 @@
-from .text_node import TextNode, TextType
+from file_manager import copy_folder_contents
 
 
 def main():
-    text_node: TextNode = TextNode("This is some anchor text", TextType.LINK, "https://www.boot.dev")
-    print(text_node)
+    copy_folder_contents("static", "public")
 
 
 if __name__ == "__main__":
