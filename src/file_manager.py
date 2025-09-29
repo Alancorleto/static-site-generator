@@ -23,7 +23,3 @@ def copy_folder_contents(src_folder, dest_folder):
         else:
             print("Copying file:", src_path, "to", dest_path, " ...")
             shutil.copy(src_path, dest_path)
-    
-
-
-    
