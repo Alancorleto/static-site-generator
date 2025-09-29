@@ -34,4 +34,14 @@ def generate_page(from_path, template_path, dest_path):
 
     with open(dest_path, 'w', encoding='utf-8') as f:
         f.write(template_content)
-    
+
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    for root, dirs, files in os.walk(dir_path_content):
+        for file in files:
+            if file.endswith('.md'):
+                relative_path = os.path.relpath(root, dir_path_content)
+                from_path = os.path.join(root, file)
+                dest_subdir = os.path.join(dest_dir_path, relative_path)
+                dest_path = os.path.join(dest_subdir, file[:-3] + '.html')  # Change .md to .html
+                generate_page(from_path, template_path, dest_path)
